@@ -1,5 +1,6 @@
 import numpy
 import xlrd
+import xlsxwriter
 import math
 
 
@@ -16,6 +17,20 @@ def readData():
         rows.append(r)
 
     return rows
+
+def drawChart(data, length):
+    workbook = xlsxwriter.Workbook('output.xlsx')
+    worksheet = workbook.add_worksheet('Chart')
+    worksheet.write_column('A1', data)
+    chart = workbook.add_chart({'type': 'scatter'})
+    chart.add_series({
+        'name': 'Correlations',
+        'categories': 'correlation',
+        'values': '=Chart!$A$1:$A$%d' % length,
+    })
+    worksheet.insert_chart('D2', chart, {'x_offset': 25, 'y_offset': 10})
+    workbook.close()
+    return
 
 def correlation(x, y):
     sumX = 0
@@ -49,8 +64,7 @@ def findMiniCor(data):
 def main():
     data = readData()
     minIdx, corArray = findMiniCor(data)
-    print minIdx
-    print corArray[160]
+    drawChart(corArray, len(corArray))
 
 if __name__ == "__main__":
     main()
