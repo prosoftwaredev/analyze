@@ -1,19 +1,21 @@
 import numpy
 import xlrd
 import xlsxwriter
+import xlwt
 import math
+import random
 
 
 def readData():
     workbook = xlrd.open_workbook('./data/Trade History.xlsx')
     worksheet = workbook.sheet_by_index(0)
     rows = []
-    for i, row in enumerate(range(worksheet.nrows)):
-        if i <= 1:
-            continue
+    for i, col in enumerate(range(worksheet.ncols)):
         r = []
-        for j, col in enumerate(range(worksheet.ncols)):
-            r.append(worksheet.cell_value(i, j))
+        for j, row in enumerate(range(worksheet.nrows)):
+            if j <= 2:
+                continue
+            r.append(worksheet.cell_value(j, i))
         rows.append(r)
 
     return rows
@@ -32,39 +34,36 @@ def drawChart(data, length):
     workbook.close()
     return
 
-def correlation(x, y):
-    sumX = 0
-    sumY = 0
-    sumSquareX = 0
-    sumSquareY = 0
-    sumMulti = 0
-    n = len(x)
-    for idx in range(n):
-        sumX += x[idx]
-        sumY += y[idx]
-        sumSquareX += math.pow(x[idx], 2)
-        sumSquareY += math.pow(y[idx], 2)
-        sumMulti += x[idx] * y[idx]
-    return (n * sumMulti - sumX * sumY) / math.sqrt((n * sumSquareX - math.pow(sumX, 2) ) * (n * sumSquareY - math.pow(sumY, 2) ))
+def random_color():
+    return chr(random.randrange(0, 255))
 
-def findMiniCor(data):
-    minIdx = []
-    minIdx.append(0)
+def writeData(data):
+    workbook = xlwt.Workbook()
+    sheet = workbook.add_sheet('result')
+    for i in range(len(data[0])):
+        sheet.write(0, i + 1, 'SYS %d' % (i+1))
+        sheet.write(i + 1, 0, 'SYS %d' % (i+1))
+    for i in range(len(data)):
+        for j in range(len(data[i])):
+            sheet.write(j + i + 1, i + 1 ,  data[i][j])
+
+    workbook.save('output.xlsx')
+
+def getCor(data):
     corArray = []
-    for index in range(len(data) - 1):
-        # corArray.append(numpy.corrcoef(data[index], data[index + 1])[0, 1])
-        corArray.append(correlation(data[index], data[index + 1]))
-        if corArray[minIdx[0]] > corArray[index]:
-            del minIdx[:]
-            minIdx.append(index)
-        elif corArray[minIdx[0]] == corArray[index]:
-            minIdx.append(index)
-    return minIdx, corArray
+    length = len(data)
+    for i in range(length):
+        corArray.append([])
+        for j in range(i, length):
+            cor = numpy.corrcoef(data[i], data[j])[0, 1]
+            corArray[i].append(cor)
+
+    return corArray
     
 def main():
     data = readData()
-    minIdx, corArray = findMiniCor(data)
-    drawChart(corArray, len(corArray))
+    corArray = getCor(data)
+    writeData(corArray)
 
 if __name__ == "__main__":
     main()
