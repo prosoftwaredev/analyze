@@ -47,7 +47,7 @@ def writeData(data):
         for j in range(len(data[i])):
             sheet.write(j + i + 1, i + 1 ,  data[i][j])
 
-    workbook.save('output.xlsx')
+    workbook.save('output.xls')
 
 def getCor(data):
     corArray = []
